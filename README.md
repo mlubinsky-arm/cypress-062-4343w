@@ -21,5 +21,6 @@ Forked from
 mbed status
 mbed device-management init -d arm.com --model-name example-app --force -q
 mbed compile -m CY8CPROTO_062_4343W -t GCC_ARM
+cp ./BUILD/CY8CPROTO_062_4343W/GCC_ARM/cypress-062-4343w.hex /Volumes/DAPLINK/
 ```
 

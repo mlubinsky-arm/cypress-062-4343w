@@ -68,6 +68,14 @@ DigitalOut thermGND(P10_0,0);
 AnalogIn thermOut(P10_1);
 DigitalOut led(LED1);
 
+void init_temp(){
+    printf("init_temp() \n\n");
+    for (int i=0; i<ARR_SIZE; i++){
+      temp_value[i]=20.0f;
+      printf("\n   inside init_temp()  i=%d temp_value=%f", i, temp_value[i]);
+    }
+    printf("\n");
+}
 
 float readTemp()
 {
@@ -88,15 +96,18 @@ float readTemp()
 void sensors_update() {
     printf("\n\n 1. inside sensors_update temp_index=%d", temp_index);
     temp_index = (temp_index +1)%ARR_SIZE; //wrap index
-    printf("\n\n 2. inside sensors_update temp_index=%d", temp_index);
+    printf("\n 2. inside sensors_update temp_index=%d", temp_index);
     float f = readTemp();
-    printf("\n\n 3. inside sensors_update temp_value=%f", f);
-    temp_value[temp_index] = f;
-    printf("\n\n 4. inside sensors_update temp_value=%f", temp_value);
-    float result = get_model_result(temp_value);
-    printf("\n\n 5. Predicted temperature is %f\r\n",result);
+    printf("\n 3. inside sensors_update temp_value=%f", f);
+    printf("\n 3+. inside sensors_update temp_value=%f", temp_value[temp_index]);
 
-    ThisThread::sleep_for(5000);
+    temp_value[temp_index] = f;
+    printf("\n 4. inside sensors_update temp_value=%f", temp_value[temp_index]);
+
+    float result = get_model_result(temp_value);
+    printf("\n 5. Predicted temperature is %f\r\n",result);
+
+//    ThisThread::sleep_for(1000);
 /* send to TD
      x = sprintf(td_buff,"{\"temp\":%f,\"temp_predict\":%f}", temp_value[temp_index], result);
      td_buff[x]=0; //null terminated string
@@ -195,8 +206,11 @@ int main(void)
         i = i + 1;
         float tempC = readTemp();  //read the temperature
         printf("Current temp (C): %f\r\n", tempC);
-        ThisThread::sleep_for(5000); //wait 5 sec - don't block, let other threads run
+        ThisThread::sleep_for(3000); //wait 5 sec - don't block, let other threads run
     }
+    init_temp();
+    sensors_update();
+
     // Connect with NetworkInterface
     printf("Connect to network\n");
     network = NetworkInterface::get_default_instance();
@@ -314,15 +328,18 @@ int main(void)
 
     //start a thread to update resources once every 2 seconds
     res_thread.start(callback(&res_queue, &EventQueue::dispatch_forever));
-    res_queue.call_every(2000, update_resources);
+    //res_queue.call_every(5000, update_resources);
+    res_queue.call_every(2000, sensors_update);
 
-    printf("before for \n\n");
-    for (int i=0; i<ARR_SIZE; i++){
-      temp_value[i]=20.0f;
-    }
+    init_temp();
     printf("before while \n\n");
-    while(cloud_client_running) {
+/*
+    while(1){
         sensors_update();
+    }
+*/
+    while(cloud_client_running) {
+        // sensors_update();
         // mcc_platform_do_wait(10000);
         int in_char = getchar();
         if (in_char == 'i') {
