@@ -86,11 +86,17 @@ float readTemp()
 }
 
 void sensors_update() {
+    printf("\n\n 1. inside sensors_update temp_index=%d", temp_index);
     temp_index = (temp_index +1)%ARR_SIZE; //wrap index
-    temp_value[temp_index] = readTemp();
-
+    printf("\n\n 2. inside sensors_update temp_index=%d", temp_index);
+    float f = readTemp();
+    printf("\n\n 3. inside sensors_update temp_value=%f", f);
+    temp_value[temp_index] = f;
+    printf("\n\n 4. inside sensors_update temp_value=%f", temp_value);
     float result = get_model_result(temp_value);
-    printf("\r\n Predicted temperature is %f\r\n",result);
+    printf("\n\n 5. Predicted temperature is %f\r\n",result);
+
+    ThisThread::sleep_for(5000);
 /* send to TD
      x = sprintf(td_buff,"{\"temp\":%f,\"temp_predict\":%f}", temp_value[temp_index], result);
      td_buff[x]=0; //null terminated string
@@ -302,6 +308,7 @@ int main(void)
     cloud_client = new MbedCloudClient(client_registered, client_unregistered, client_error);
 #endif // MBED_CLOUD_CLIENT_SUPPORT_UPDATE
 
+    printf("before add objects \n\n");   
     cloud_client->add_objects(m2m_obj_list);
     cloud_client->setup(network); // cloud_client->setup(NULL); -- https://jira.arm.com/browse/IOTCLT-3114
 
@@ -309,9 +316,11 @@ int main(void)
     res_thread.start(callback(&res_queue, &EventQueue::dispatch_forever));
     res_queue.call_every(2000, update_resources);
 
+    printf("before for \n\n");
     for (int i=0; i<ARR_SIZE; i++){
       temp_value[i]=20.0f;
     }
+    printf("before while \n\n");
     while(cloud_client_running) {
         sensors_update();
         // mcc_platform_do_wait(10000);
