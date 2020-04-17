@@ -27,6 +27,23 @@
 #include "cypress_capsense.h"
 #include "blinker_app.h"
 
+
+#include "models/model.h"
+#include "treasure-data-rest.h"
+
+#define ARR_SIZE 10    //to store 10 temperature points
+#define BUFF_SIZE   100 // used by td rest api
+
+char td_buff     [BUFF_SIZE] = {0};
+float temp_value[ARR_SIZE];
+volatile int temp_index =0;
+
+/*  
+TreasureData_RESTAPI* td = new TreasureData_RESTAPI(net,"michael_aiot_workshop_db",MBED_CONF_APP_TABLE_NAME, MBED_CONF_APP_API_KEY);
+*/
+
+
+
 // Pointers to the resources that will be created in main_application().
 static MbedCloudClient *cloud_client;
 static bool cloud_client_running = true;
@@ -65,9 +82,20 @@ float readTemp()
                              ((2.041094E-07) * pow((float64)logrT, (float32)3)));
 
     float temperatureC = (float32_t)(((1.0 / stEqn) - 273.15)  + 0.5);
- //   float temperatureF = (temperatureC * 9.0/5.0) + 32;
-
     return temperatureC;
+}
+
+void sensors_update() {
+    temp_index = (temp_index +1)%ARR_SIZE; //wrap index
+    temp_value[temp_index] = readTemp();
+
+    float result = get_model_result(temp_value);
+    printf("\r\n Predicted temperature is %f\r\n",result);
+/* send to TD
+     x = sprintf(td_buff,"{\"temp\":%f,\"temp_predict\":%f}", temp_value[temp_index], result);
+     td_buff[x]=0; //null terminated string
+     td->sendData(td_buff,strlen(td_buff));
+*/
 }
 
 void print_client_ids(void)
@@ -281,7 +309,12 @@ int main(void)
     res_thread.start(callback(&res_queue, &EventQueue::dispatch_forever));
     res_queue.call_every(2000, update_resources);
 
+    for (int i=0; i<ARR_SIZE; i++){
+      temp_value[i]=20.0f;
+    }
     while(cloud_client_running) {
+        sensors_update();
+        // mcc_platform_do_wait(10000);
         int in_char = getchar();
         if (in_char == 'i') {
             print_client_ids(); // When 'i' is pressed, print endpoint info
