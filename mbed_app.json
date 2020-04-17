@@ -19,8 +19,8 @@
             "mbed-trace.enable"                         : null,
             "events.shared-stacksize"                   : 2048,
             "nsapi.default-wifi-security"               : "WPA_WPA2",
-            "nsapi.default-wifi-ssid"                   : "\"SSID\"",
-            "nsapi.default-wifi-password"               : "\"PASSWORD\""
+            "nsapi.default-wifi-ssid"                   : "\"michael\"",
+            "nsapi.default-wifi-password"               : "\"4086151274\""
         },
         "Freescale": {
             "lwip.mem-size"                             : 12500

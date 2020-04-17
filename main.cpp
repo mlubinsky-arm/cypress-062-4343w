@@ -156,17 +156,12 @@ int main(void)
     }
 
     int i=0;
-    while(1) {
+    while(i<5) {
         printf("counter : %d\r\n", i);
         i = i + 1;
-        if (i > 100) i=0;
-
-        //led = !led; //blink an led for fun
         float tempC = readTemp();  //read the temperature
         printf("Current temp (C): %f\r\n", tempC);
-
         ThisThread::sleep_for(5000); //wait 5 sec - don't block, let other threads run
-
     }
     // Connect with NetworkInterface
     printf("Connect to network\n");
