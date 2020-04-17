@@ -46,6 +46,30 @@ static M2MResource* m2m_deregister_res;
 Thread res_thread;
 EventQueue res_queue;
 
+DigitalOut thermVDD(P10_3,1);
+DigitalOut thermGND(P10_0,0);
+AnalogIn thermOut(P10_1);
+DigitalOut led(LED1);
+
+
+float readTemp()
+{
+    float refVoltage = thermOut.read() * 2.4; // Range of ADC 0->2*Vref
+    float refCurrent = refVoltage  / 10000.0; // 10k Reference Resistor
+    float thermVoltage = 3.3 - refVoltage;    // Assume supply voltage is 3.3v
+    float thermResistance = thermVoltage / refCurrent;
+    float logrT = (float32_t)log((float64_t)thermResistance);
+
+    /* Calculate temperature from the resistance of thermistor using Steinhart-Hart Equation */
+    float stEqn = (float32_t)((0.0009032679) + ((0.000248772) * logrT) +
+                             ((2.041094E-07) * pow((float64)logrT, (float32)3)));
+
+    float temperatureC = (float32_t)(((1.0 / stEqn) - 273.15)  + 0.5);
+ //   float temperatureF = (temperatureC * 9.0/5.0) + 32;
+
+    return temperatureC;
+}
+
 void print_client_ids(void)
 {
     printf("Account ID: %s\n", cloud_client->endpoint_info()->account_id.c_str());
@@ -131,6 +155,19 @@ int main(void)
         return -1;
     }
 
+    int i=0;
+    while(1) {
+        printf("counter : %d\r\n", i);
+        i = i + 1;
+        if (i > 100) i=0;
+
+        //led = !led; //blink an led for fun
+        float tempC = readTemp();  //read the temperature
+        printf("Current temp (C): %f\r\n", tempC);
+
+        ThisThread::sleep_for(5000); //wait 5 sec - don't block, let other threads run
+
+    }
     // Connect with NetworkInterface
     printf("Connect to network\n");
     network = NetworkInterface::get_default_instance();
