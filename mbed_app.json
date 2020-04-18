@@ -188,6 +188,14 @@
             "help"      : "Helper macro to enable calculation of rom regions. target.header_offset and target.app_offset still needs to be calculated manually, though.",
             "value"     : "(32*1024)",
             "macro_name": "MBED_BOOTLOADER_SIZE"
+        },
+        "api-key":{
+            "help":  "REST API Key for Treasure Data",
+            "value": "\"9722/ede7b9fbcdd5a66605d36c536028c765a45ae5bc\""
+        },
+        "table-name":{
+            "help":  "name of table in Treasure Data to send data to",
+            "value": "\"workshopml\""
         }
     }
 }

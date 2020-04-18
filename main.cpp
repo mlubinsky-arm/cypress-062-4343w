@@ -38,10 +38,9 @@ char td_buff     [BUFF_SIZE] = {0};
 float temp_value[ARR_SIZE];
 volatile int temp_index =0;
 
-/*  
-TreasureData_RESTAPI* td = new TreasureData_RESTAPI(net,"michael_aiot_workshop_db",MBED_CONF_APP_TABLE_NAME, MBED_CONF_APP_API_KEY);
-*/
-
+  
+TreasureData_RESTAPI* td;  // = new TreasureData_RESTAPI(network,"michael_aiot_workshop_db",MBED_CONF_APP_TABLE_NAME, MBED_CONF_APP_API_KEY);
+//TreasureData_RESTAPI* td = new TreasureData_RESTAPI(network,"michael_aiot_workshop_db",MBED_CONF_APP_TABLE_NAME, MBED_CONF_APP_API_KEY);
 
 
 // Pointers to the resources that will be created in main_application().
@@ -72,7 +71,7 @@ void init_temp(){
     printf("init_temp() \n\n");
     for (int i=0; i<ARR_SIZE; i++){
       temp_value[i]=20.0f;
-      printf("\n   inside init_temp()  i=%d temp_value=%f", i, temp_value[i]);
+      //printf("\n   inside init_temp()  i=%d temp_value=%f", i, temp_value[i]);
     }
     printf("\n");
 }
@@ -94,25 +93,33 @@ float readTemp()
 }
 
 void sensors_update() {
-    printf("\n\n 1. inside sensors_update temp_index=%d", temp_index);
+    //printf("\n\n 1. inside sensors_update temp_index=%d", temp_index);
     temp_index = (temp_index +1)%ARR_SIZE; //wrap index
-    printf("\n 2. inside sensors_update temp_index=%d", temp_index);
+    //printf("\n 2. inside sensors_update temp_index=%d", temp_index);
     float f = readTemp();
     printf("\n 3. inside sensors_update temp_value=%f", f);
-    printf("\n 3+. inside sensors_update temp_value=%f", temp_value[temp_index]);
+    //printf("\n 3+. inside sensors_update temp_value=%f", temp_value[temp_index]);
 
     temp_value[temp_index] = f;
     printf("\n 4. inside sensors_update temp_value=%f", temp_value[temp_index]);
 
     float result = get_model_result(temp_value);
-    printf("\n 5. Predicted temperature is %f\r\n",result);
+    printf("\n 5. Predicted temperature is %f",result);
 
 //    ThisThread::sleep_for(1000);
-/* send to TD
-     x = sprintf(td_buff,"{\"temp\":%f,\"temp_predict\":%f}", temp_value[temp_index], result);
-     td_buff[x]=0; //null terminated string
-     td->sendData(td_buff,strlen(td_buff));
-*/
+}
+
+int send2td(float result){
+     float humidity_value=0.0f;
+     float pressure_value=0.0f;
+     printf("\n send2td: temp_index=%d  temp_value=%f \n", temp_index, temp_value[temp_index]);
+     int x = 0;
+     x = sprintf(td_buff,"{\"temp\":%f,\"humidity\":%f,\"pressure\":%f,\"temp_predict\":%f}", temp_value[temp_index], humidity_value, pressure_value, result);
+     td_buff[x]=0; //null terminate string
+     printf(td_buff);
+     printf("\n before td->sendData \n");
+     int res = td->sendData(td_buff,strlen(td_buff));
+     printf("\n after  td->sendData res=%d \n", res);
 }
 
 void print_client_ids(void)
@@ -209,7 +216,7 @@ int main(void)
         ThisThread::sleep_for(3000); //wait 5 sec - don't block, let other threads run
     }
     init_temp();
-    sensors_update();
+    //sensors_update();
 
     // Connect with NetworkInterface
     printf("Connect to network\n");
@@ -225,7 +232,12 @@ int main(void)
     }
 
     printf("Network initialized, connected with IP %s\n\n", network->get_ip_address());
-
+    td = new TreasureData_RESTAPI(network,"michael_aiot_workshop_db",MBED_CONF_APP_TABLE_NAME, MBED_CONF_APP_API_KEY);
+    if (!td){
+         printf("\n ERROR CONNECTING TO TD");
+    } else {   
+        send2td(0.5f);
+    }
     // Run developer flow
     printf("Start developer flow\n");
     status = fcc_init();
